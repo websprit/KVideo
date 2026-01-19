@@ -229,14 +229,7 @@ export function useHlsPlayer({
                         // It IS a master playlist. Use map + Promise.all for clean concurrent processing.
                         const lines = masterContent.split(/\r?\n/);
 
-                        // Helper to safely compare origins
-                        const isSameOrigin = (url: string): boolean => {
-                            try {
-                                return new URL(url).origin === new URL(absoluteMasterSrc).origin;
-                            } catch {
-                                return false;
-                            }
-                        };
+
 
                         // Process each line, looking back at previous line to determine context
                         const lineProcessingPromises = lines.map(async (line, index) => {
@@ -247,11 +240,10 @@ export function useHlsPlayer({
                                 const uriMatch = trimmedLine.match(/URI="([^"]+)"/);
                                 const uri = uriMatch?.[1];
                                 if (uri) {
-                                    // Process if relative URL or same-origin absolute URL
+                                    // Process if relative or absolute URL; fetch will handle CORS
                                     const isRelative = !uri.startsWith('http');
-                                    const sameOrigin = uri.startsWith('http') && isSameOrigin(uri);
 
-                                    if (isRelative || sameOrigin) {
+                                    if (isRelative || uri.startsWith('http')) {
                                         try {
                                             const absoluteUrl = isRelative ? new URL(uri, absoluteMasterSrc).toString() : uri;
                                             const subRes = await fetch(absoluteUrl);
@@ -272,11 +264,10 @@ export function useHlsPlayer({
                             // Handle playlist URL (line after #EXT-X-STREAM-INF)
                             const prevLine = index > 0 ? lines[index - 1].trim() : '';
                             if (prevLine.startsWith('#EXT-X-STREAM-INF') && trimmedLine && !trimmedLine.startsWith('#')) {
-                                // Process if relative URL or same-origin absolute URL
+                                // Process if relative or absolute URL; fetch will handle CORS
                                 const isRelative = !trimmedLine.startsWith('http');
-                                const sameOrigin = trimmedLine.startsWith('http') && isSameOrigin(trimmedLine);
 
-                                if (isRelative || sameOrigin) {
+                                if (isRelative || trimmedLine.startsWith('http')) {
                                     try {
                                         const absoluteUrl = isRelative ? new URL(trimmedLine, absoluteMasterSrc).toString() : trimmedLine;
                                         const subRes = await fetch(absoluteUrl);
