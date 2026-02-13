@@ -3,6 +3,8 @@ import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
 
 export const runtime = 'edge';
 
+const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM === 'true';
+
 export const revalidate = 3600; // Cache for 1 hour
 
 interface Category {
@@ -161,6 +163,9 @@ async function handleTypesRequest(sourceList: any[]) {
 }
 
 export async function POST(request: Request) {
+    if (DISABLE_PREMIUM) {
+        return NextResponse.json({ tags: [] });
+    }
     try {
         const body = await request.json();
         const { sources } = body;
@@ -171,5 +176,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+    if (DISABLE_PREMIUM) {
+        return NextResponse.json({ tags: [] });
+    }
     return await handleTypesRequest(PREMIUM_SOURCES);
 }

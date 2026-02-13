@@ -5,6 +5,7 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import { TagManager } from './TagManager';
 import { MovieGrid } from './MovieGrid';
 import { useTagManager } from './hooks/useTagManager';
@@ -15,6 +16,23 @@ interface PopularFeaturesProps {
 }
 
 export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
+  const [disablePremium, setDisablePremium] = useState(false);
+
+  useEffect(() => {
+    // Check global flag set by PasswordGate
+    if (typeof window !== 'undefined' && (window as any).__KVIDEO_DISABLE_PREMIUM__) {
+      setDisablePremium(true);
+    }
+    // Also listen for delayed config fetch
+    const checkInterval = setInterval(() => {
+      if (typeof window !== 'undefined' && (window as any).__KVIDEO_DISABLE_PREMIUM__) {
+        setDisablePremium(true);
+        clearInterval(checkInterval);
+      }
+    }, 500);
+    return () => clearInterval(checkInterval);
+  }, []);
+
   const {
     tags,
     selectedTag,
@@ -48,6 +66,11 @@ export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
     }
   };
 
+  // Filter out the "高级" tag when premium is disabled
+  const filteredTags = disablePremium
+    ? tags.filter(t => t.id !== 'custom_高级' && t.label !== '高级')
+    : tags;
+
   return (
     <div className="animate-fade-in">
       {/* Content Type Toggle (Capsule Liquid Glass - Fixed & Centered) */}
@@ -78,13 +101,13 @@ export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
         </div>
       </div>
       <TagManager
-        tags={tags}
+        tags={filteredTags}
         selectedTag={selectedTag}
         showTagManager={showTagManager}
         newTagInput={newTagInput}
         justAddedTag={justAddedTag}
         onTagSelect={(tagId) => {
-          if (tagId === 'custom_高级' || tags.find(t => t.id === tagId)?.label === '高级') {
+          if (!disablePremium && (tagId === 'custom_高级' || tags.find(t => t.id === tagId)?.label === '高级')) {
             window.location.href = '/premium';
             return;
           }

@@ -174,10 +174,13 @@ export const settingsStore = {
       const validPremiumSources = (Array.isArray(parsed.premiumSources) ? parsed.premiumSources : getDefaultPremiumSources())
         .filter((s: any) => s && s.id && s.name && s.baseUrl);
 
+      // If premium is disabled via env, force empty premiumSources
+      const isPremiumDisabled = typeof window !== 'undefined' && (window as any).__KVIDEO_DISABLE_PREMIUM__;
+
       // Validate that parsed data has all required properties
       return {
         sources: validSources,
-        premiumSources: validPremiumSources,
+        premiumSources: isPremiumDisabled ? [] : validPremiumSources,
         subscriptions: mergedSubscriptions.filter((s: any) => s && s.id && s.name && s.url),
         sortBy: parsed.sortBy || 'default',
         searchHistory: parsed.searchHistory !== undefined ? parsed.searchHistory : true,

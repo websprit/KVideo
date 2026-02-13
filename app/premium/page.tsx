@@ -1,6 +1,7 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { SearchForm } from '@/components/search/SearchForm';
 import { NoResults } from '@/components/search/NoResults';
 import { Navbar } from '@/components/layout/Navbar';
@@ -10,6 +11,9 @@ import { PremiumContent } from '@/components/premium/PremiumContent';
 import { FavoritesSidebar } from '@/components/favorites/FavoritesSidebar';
 
 function PremiumHomePage() {
+    const router = useRouter();
+    const [premiumDisabled, setPremiumDisabled] = useState<boolean | null>(null);
+
     const {
         query,
         hasSearched,
@@ -21,6 +25,34 @@ function PremiumHomePage() {
         handleSearch,
         handleReset,
     } = usePremiumHomePage();
+
+    useEffect(() => {
+        // Check if premium is disabled via global flag first
+        if (typeof window !== 'undefined' && (window as any).__KVIDEO_DISABLE_PREMIUM__) {
+            router.replace('/');
+            return;
+        }
+        // Fallback: fetch config
+        fetch('/api/config')
+            .then(res => res.json())
+            .then(data => {
+                if (data.disablePremium) {
+                    router.replace('/');
+                } else {
+                    setPremiumDisabled(false);
+                }
+            })
+            .catch(() => setPremiumDisabled(false));
+    }, [router]);
+
+    // Show loading while checking
+    if (premiumDisabled === null) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-black">
+                <div className="animate-spin rounded-full h-16 w-16 border-4 border-[var(--accent-color)] border-t-transparent"></div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-black">
@@ -84,3 +116,4 @@ export default function PremiumPage() {
         </Suspense>
     );
 }
+

@@ -60,6 +60,11 @@ export function PasswordGate({ children, hasEnvPassword: initialHasEnvPassword }
                         settingsStore.syncEnvSubscriptions(data.subscriptionSources);
                     }
 
+                    // Store disablePremium flag globally for other components
+                    if (typeof window !== 'undefined') {
+                        (window as any).__KVIDEO_DISABLE_PREMIUM__ = !!data.disablePremium;
+                    }
+
                     // Re-evaluate lock status with confirmed server state
                     // Persistence only works if hasEnvPassword is true
                     const canPersist = data.hasEnvPassword && data.persistPassword;

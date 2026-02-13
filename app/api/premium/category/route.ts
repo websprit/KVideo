@@ -4,6 +4,8 @@ export const runtime = 'edge';
 // We still import this type but won't rely on the empty array
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
 
+const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM === 'true';
+
 /**
  * Shared handler for fetching content
  */
@@ -108,6 +110,9 @@ async function handleCategoryRequest(
 }
 
 export async function POST(request: Request) {
+    if (DISABLE_PREMIUM) {
+        return NextResponse.json({ videos: [] });
+    }
     try {
         const body = await request.json();
         const { sources, category, page, limit } = body;
@@ -125,6 +130,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
+    if (DISABLE_PREMIUM) {
+        return NextResponse.json({ videos: [] });
+    }
     // Legacy GET support - currently BROKEN since ADULT_SOURCES is empty
     // But kept for structure. It will likely return 500 "No enabled sources"
     const { searchParams } = new URL(request.url);
