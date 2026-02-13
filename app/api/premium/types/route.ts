@@ -3,7 +3,7 @@ import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
 
 export const runtime = 'edge';
 
-const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM === 'true';
+const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM !== 'false';
 
 export const revalidate = 3600; // Cache for 1 hour
 

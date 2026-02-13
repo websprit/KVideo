@@ -4,7 +4,7 @@ export const runtime = 'edge';
 // We still import this type but won't rely on the empty array
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
 
-const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM === 'true';
+const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM !== 'false';
 
 /**
  * Shared handler for fetching content

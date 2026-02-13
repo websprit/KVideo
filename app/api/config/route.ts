@@ -10,7 +10,7 @@ export const runtime = 'edge';
 const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
 const PERSIST_PASSWORD = process.env.PERSIST_PASSWORD !== 'false';
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
-const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM === 'true';
+const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM !== 'false';
 
 export async function GET() {
     return NextResponse.json({
