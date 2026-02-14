@@ -1,16 +1,54 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { Icons } from '@/components/ui/Icon';
 import { siteConfig } from '@/lib/config/site-config';
+import { useState, useEffect } from 'react';
+import { LogOut, Shield } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface NavbarProps {
     onReset: () => void;
     isPremiumMode?: boolean;
 }
 
+interface UserInfo {
+    id: number;
+    username: string;
+    isAdmin: boolean;
+    disablePremium: boolean;
+}
+
 export function Navbar({ onReset, isPremiumMode = false }: NavbarProps) {
     const settingsHref = isPremiumMode ? '/premium/settings' : '/settings';
+    const router = useRouter();
+    const [user, setUser] = useState<UserInfo | null>(null);
+
+    useEffect(() => {
+        // Try global first, then fetch
+        if (typeof window !== 'undefined' && (window as any).__KVIDEO_USER__) {
+            setUser((window as any).__KVIDEO_USER__);
+        } else {
+            fetch('/api/auth/me')
+                .then(r => r.json())
+                .then(d => { if (d.user) setUser(d.user); })
+                .catch(() => { });
+        }
+    }, []);
+
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            // Clear localStorage on logout
+            localStorage.clear();
+            // Force full page reload to clear all React state
+            window.location.href = '/login';
+        } catch {
+            window.location.href = '/login';
+        }
+    };
 
     return (
         <nav className="sticky top-0 z-[2000] pt-4 pb-2" style={{
@@ -43,6 +81,24 @@ export function Navbar({ onReset, isPremiumMode = false }: NavbarProps) {
                         </Link>
 
                         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                            {/* User info */}
+                            {user && (
+                                <div className="hidden sm:flex items-center gap-2 text-sm text-[var(--text-color-secondary)]">
+                                    <span className="opacity-60">{user.username}</span>
+                                </div>
+                            )}
+
+                            {/* Admin link */}
+                            {user?.isAdmin && (
+                                <Link
+                                    href="/admin"
+                                    className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-[var(--radius-full)] bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-color)] hover:bg-[color-mix(in_srgb,var(--accent-color)_10%,transparent)] transition-all duration-200 cursor-pointer"
+                                    aria-label="管理"
+                                >
+                                    <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+                                </Link>
+                            )}
+
                             <a
                                 href="https://github.com/KuekHaoYang/KVideo"
                                 target="_blank"
@@ -62,6 +118,15 @@ export function Navbar({ onReset, isPremiumMode = false }: NavbarProps) {
                                 </svg>
                             </Link>
                             <ThemeSwitcher />
+
+                            {/* Logout */}
+                            <button
+                                onClick={handleLogout}
+                                className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-[var(--radius-full)] bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-color)] hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-all duration-200 cursor-pointer"
+                                aria-label="退出登录"
+                            >
+                                <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </button>
                         </div>
                     </div>
                 </div>

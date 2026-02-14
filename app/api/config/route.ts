@@ -1,36 +1,31 @@
 /**
  * Config API Route
  * Exposes configuration status (never actual values) to the client
+ * disablePremium is now per-user from the database
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthUser } from '@/lib/auth';
 
-export const runtime = 'edge';
-
-const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
-const PERSIST_PASSWORD = process.env.PERSIST_PASSWORD !== 'false';
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
-const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM !== 'false';
 
 export async function GET() {
+    const user = await getAuthUser();
+    const disablePremium = user?.disablePremium ?? true;
+
     return NextResponse.json({
-        hasEnvPassword: ACCESS_PASSWORD.length > 0,
-        persistPassword: PERSIST_PASSWORD,
+        hasEnvPassword: false, // Auth is now handled by login, no password gate needed
+        persistPassword: false,
         subscriptionSources: SUBSCRIPTION_SOURCES,
-        disablePremium: DISABLE_PREMIUM,
+        disablePremium,
     });
 }
 
 export async function POST(request: NextRequest) {
+    // Keep for backward compatibility, but no longer used
     try {
-        const { password } = await request.json();
-
-        if (!ACCESS_PASSWORD) {
-            return NextResponse.json({ valid: false, message: 'No env password set' });
-        }
-
-        const valid = password === ACCESS_PASSWORD;
-        return NextResponse.json({ valid });
+        await request.json();
+        return NextResponse.json({ valid: true });
     } catch {
         return NextResponse.json({ valid: false, message: 'Invalid request' }, { status: 400 });
     }

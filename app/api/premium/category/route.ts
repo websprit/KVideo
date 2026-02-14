@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
 
-export const runtime = 'edge';
 // We still import this type but won't rely on the empty array
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
-
-const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM !== 'false';
+import { getAuthUser } from '@/lib/auth';
 
 /**
  * Shared handler for fetching content
@@ -110,7 +108,8 @@ async function handleCategoryRequest(
 }
 
 export async function POST(request: Request) {
-    if (DISABLE_PREMIUM) {
+    const user = await getAuthUser();
+    if (user?.disablePremium) {
         return NextResponse.json({ videos: [] });
     }
     try {
@@ -130,7 +129,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET(request: Request) {
-    if (DISABLE_PREMIUM) {
+    const user = await getAuthUser();
+    if (user?.disablePremium) {
         return NextResponse.json({ videos: [] });
     }
     // Legacy GET support - currently BROKEN since ADULT_SOURCES is empty

@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
 
   output: 'standalone',
   outputFileTracingRoot: __dirname,
+
+  // mysql2 native module should not be bundled
+  serverExternalPackages: ['mysql2'],
+
   turbopack: {
     root: __dirname,
   },

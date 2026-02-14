@@ -68,7 +68,14 @@ function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
     if (Array.isArray(raw)) {
       return raw
         .filter((item: any) => item && typeof item.name === 'string' && typeof item.url === 'string')
-        .map((item: any) => createSubscription(item.name, item.url));
+        .map((item: any) => {
+          // Auto-fix URLs missing protocol
+          let url = item.url.trim();
+          if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+          }
+          return createSubscription(item.name, url);
+        });
     }
   } catch (e) {
     // Ignore JSON parse error, try direct URL

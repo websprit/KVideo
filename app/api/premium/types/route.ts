@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
-
-export const runtime = 'edge';
-
-const DISABLE_PREMIUM = process.env.DISABLE_PREMIUM !== 'false';
+import { getAuthUser } from '@/lib/auth';
 
 export const revalidate = 3600; // Cache for 1 hour
 
@@ -163,7 +160,8 @@ async function handleTypesRequest(sourceList: any[]) {
 }
 
 export async function POST(request: Request) {
-    if (DISABLE_PREMIUM) {
+    const user = await getAuthUser();
+    if (user?.disablePremium) {
         return NextResponse.json({ tags: [] });
     }
     try {
@@ -176,7 +174,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-    if (DISABLE_PREMIUM) {
+    const user = await getAuthUser();
+    if (user?.disablePremium) {
         return NextResponse.json({ tags: [] });
     }
     return await handleTypesRequest(PREMIUM_SOURCES);
